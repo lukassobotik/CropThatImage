@@ -5,6 +5,23 @@
   align-items: center;
   padding: 6rem;
   min-height: 100vh;
+  background: #181818;
+}
+
+.main h1 {
+  color: white;
+}
+
+.main p {
+  color: white;
+}
+
+.main input {
+  color: white;
+}
+
+.main canvas {
+  background: #252525;
 }
 
 .description {
@@ -227,4 +244,9 @@
   to {
     transform: rotate(0deg);
   }
+}
+
+.image {
+  border: .5rem solid black;
+  border-radius: 2rem;
 }
