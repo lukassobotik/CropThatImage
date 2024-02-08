@@ -9,6 +9,7 @@ export default function LogoRemover() {
     const [croppedImageDownloadURL, setCroppedImageDownloadURL] = useState<string>('');
     const [croppedImageName, setCroppedImageName] = useState<string>('cropped_image.png');
     const [processingDone, setProcessingDone] = useState<boolean>(false);
+    const [forceSquare, setForceSquare] = useState<boolean>(false);
     const [padding, setPadding] = useState<number>(0);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -42,10 +43,20 @@ export default function LogoRemover() {
             right = edges.right;
 
             // Cropping
-            const croppedWidth = (right - left) + (padding * 2);
-            const croppedHeight = (bottom - top) + (padding * 2);
-            // const croppedWidth = 1024 - 150;
-            // const croppedHeight = 1024 - 200;
+            console.log("forceSquare: ", forceSquare);
+            let croppedWidth = (right - left) + (padding * 2);
+            let croppedHeight = (bottom - top) + (padding * 2);
+            let addedSquarePaddingToWidth = false;
+            let addedSquarePaddingToHeight = false;
+            let addedSquarePadding = 0;
+            if (forceSquare) {
+                const maxDimension = Math.max(croppedWidth, croppedHeight);
+                addedSquarePadding = (maxDimension - Math.min(croppedWidth, croppedHeight));
+                addedSquarePaddingToWidth = croppedWidth !== maxDimension;
+                addedSquarePaddingToHeight = croppedHeight !== maxDimension;
+                croppedWidth = maxDimension;
+                croppedHeight = maxDimension;
+            }
             const croppedCanvas = document.createElement('canvas');
             const croppedCtx = croppedCanvas.getContext('2d');
             if (!croppedCtx) return; // Handle potential canvas issue
@@ -53,7 +64,7 @@ export default function LogoRemover() {
             croppedCanvas.height = croppedHeight;
             setCroppedImageWidth(croppedWidth);
             setCroppedImageHeight(croppedHeight);
-            croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, padding, padding, croppedWidth, croppedHeight);
+            croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 + padding : padding, addedSquarePaddingToHeight ? addedSquarePadding / 2 + padding : padding, croppedWidth, croppedHeight);
             const croppedImageData = croppedCtx.getImageData(left, top, croppedWidth, croppedHeight);
             setImageURL(croppedCanvas.toDataURL());
 
@@ -100,14 +111,22 @@ export default function LogoRemover() {
         }
     };
 
+    const toggleIsSquare = () => {
+        setForceSquare(!forceSquare);
+    };
+
     return (
         <div>
             <h1>Logo Edges Remover</h1>
             <p>Remove the edges of a logo</p>
             {!processingDone && <input type="file" className={styles.file_input} onChange={handleFileChange}/>}
             <canvas ref={canvasRef} className={styles.image_ref}/>
-            <div>
+            <div className={styles.image_config}>
                 <input type="number" className={styles.number_input} value={padding} onChange={(e) => setPadding(parseInt(e.target.value))} />
+                <div>
+                    Force Square:
+                    <input type="checkbox" value={forceSquare ? "true" : "false"} onClick={(e) => toggleIsSquare()} />
+                </div>
             </div>
             <div className={styles.processing_done}>
                 {processingDone && <p>Image processing done!</p>}

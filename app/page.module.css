@@ -37,6 +37,15 @@
   color: white;
 }
 
+.image_config {
+  display: flex;
+  flex-direction: column;
+}
+
+.image_config div {
+  color: white;
+}
+
 .main img {
   background-color: var(--backgroundColor);
   background-image:
