@@ -11,6 +11,10 @@
   --squareSize: 1em;
 }
 
+.number_input {
+  color: black;
+}
+
 .main h1 {
   color: white;
 }
@@ -29,7 +33,7 @@
   margin: .5rem 0 .5rem 0;
 }
 
-.main input {
+.file_input {
   color: white;
 }
 

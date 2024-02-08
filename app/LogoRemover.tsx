@@ -9,6 +9,7 @@ export default function LogoRemover() {
     const [croppedImageDownloadURL, setCroppedImageDownloadURL] = useState<string>('');
     const [croppedImageName, setCroppedImageName] = useState<string>('cropped_image.png');
     const [processingDone, setProcessingDone] = useState<boolean>(false);
+    const [padding, setPadding] = useState<number>(0);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
@@ -41,8 +42,8 @@ export default function LogoRemover() {
             right = edges.right;
 
             // Cropping
-            const croppedWidth = right - left;
-            const croppedHeight = bottom - top;
+            const croppedWidth = (right - left) + (padding * 2);
+            const croppedHeight = (bottom - top) + (padding * 2);
             // const croppedWidth = 1024 - 150;
             // const croppedHeight = 1024 - 200;
             const croppedCanvas = document.createElement('canvas');
@@ -52,7 +53,7 @@ export default function LogoRemover() {
             croppedCanvas.height = croppedHeight;
             setCroppedImageWidth(croppedWidth);
             setCroppedImageHeight(croppedHeight);
-            croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, 0, 0, croppedWidth, croppedHeight);
+            croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, padding, padding, croppedWidth, croppedHeight);
             const croppedImageData = croppedCtx.getImageData(left, top, croppedWidth, croppedHeight);
             setImageURL(croppedCanvas.toDataURL());
 
@@ -88,6 +89,7 @@ export default function LogoRemover() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files !== null) {
             console.log(e?.target?.files[0].name)
+            // TODO: Split the filename by '.', get the last item and add '_cropped' before the extension
             setCroppedImageName(e?.target?.files[0].name.slice(0, -4) + '_cropped.png');
             const reader = new FileReader();
             reader.onload = function (event) {
@@ -102,8 +104,11 @@ export default function LogoRemover() {
         <div>
             <h1>Logo Edges Remover</h1>
             <p>Remove the edges of a logo</p>
-            {!processingDone && <input type="file" onChange={handleFileChange}/>}
+            {!processingDone && <input type="file" className={styles.file_input} onChange={handleFileChange}/>}
             <canvas ref={canvasRef} className={styles.image_ref}/>
+            <div>
+                <input type="number" className={styles.number_input} value={padding} onChange={(e) => setPadding(parseInt(e.target.value))} />
+            </div>
             <div className={styles.processing_done}>
                 {processingDone && <p>Image processing done!</p>}
                 {croppedImageDownloadURL &&
