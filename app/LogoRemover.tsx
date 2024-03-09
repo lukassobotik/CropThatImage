@@ -193,8 +193,9 @@ export default function LogoRemover() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files !== null) {
             console.log(e?.target?.files[0].name)
-            // TODO: Split the filename by '.', get the last item and add '_cropped' before the extension
-            setCroppedImageName(e?.target?.files[0].name.slice(0, -4) + '_cropped.png');
+            let name = e?.target?.files[0].name;
+            name = name.split('.').slice(0, -1).join('.') + '_cropped.png';
+            setCroppedImageName(name);
             const reader = new FileReader();
             reader.onload = function (event) {
                 setImage(event?.target?.result, true);
