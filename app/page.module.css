@@ -86,10 +86,19 @@
 }
 
 .image_preview img {
+  max-height: calc(100vh - 4rem);
+  max-width: 100%;
   object-fit: contain;
 }
 
+.history_buttons {
+  display: flex;
+  justify-content: space-between;
+}
 
+.history_buttons button {
+  width: 100%;
+}
 
 
 

@@ -4,7 +4,11 @@ import styles from "./page.module.css";
 import imglyRemoveBackground, {Config} from "@imgly/background-removal"
 
 export default function LogoRemover() {
+    const [originalImageURL, setOriginalImageURL] = useState<any>(null);
     const [imageURL, setImageURL] = useState<any>(null);
+    const [imageURLHistory, setImageURLHistory] = useState<string[]>([]);
+    const [imageURLFuture, setImageURLFuture] = useState<string[]>([]);
+    const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number>(-1);
     const [croppedImageHeight, setCroppedImageHeight] = useState<number>(400);
     const [croppedImageWidth, setCroppedImageWidth] = useState<number>(400);
     const [croppedImageDownloadURL, setCroppedImageDownloadURL] = useState<string>('');
@@ -27,7 +31,7 @@ export default function LogoRemover() {
     }
 
     useEffect(() => {
-        if (!imageURL || processingDone || hasProcessingStarted) return;
+        if (!imageURL || hasProcessingStarted) return;
 
         setCroppedImageWidth(imageURL.width);
         setCroppedImageHeight(imageURL.height);
@@ -45,8 +49,13 @@ export default function LogoRemover() {
     }, [backgroundRemoved]);
 
     const startProcessingImage = (ignoreRemoveBg: boolean) => {
-        if (!imageURL || processingDone) return;
+        if (!imageURL || !originalImageURL) return;
         setHasProcessingStarted(true);
+        let currentImageURL = imageURL;
+
+        if (imageURLFuture.length > 0) {
+            setImageURLFuture([]);
+        }
 
         const canvas = canvasRef.current;
         if (!canvas) return; // Handle potential canvas issue
@@ -66,8 +75,8 @@ export default function LogoRemover() {
 
             if (removeBg && !ignoreRemoveBg) {
                 console.log("Removing Background")
-                imglyRemoveBackground(imageURL, BGRemovalConfig).then((blob: Blob) => {
-                    setImageURL(URL.createObjectURL(blob));
+                imglyRemoveBackground(currentImageURL, BGRemovalConfig).then((blob: Blob) => {
+                    setImage(URL.createObjectURL(blob), false);
                     setBackgroundRemoved(true);
                     return;
                 });
@@ -79,12 +88,22 @@ export default function LogoRemover() {
             const croppedCanvas = cropToEdges(img, ctx, canvas);
             if (croppedCanvas === undefined) return;
 
-            setImageURL(croppedCanvas.toDataURL());
+            setImage(croppedCanvas.toDataURL(), true);
             setProcessingCompleted(true);
             setCroppedImageDownloadURL(croppedCanvas.toDataURL('image/png'));
         };
 
-        img.src = imageURL;
+        img.src = currentImageURL;
+    }
+
+    const setImage = (url: any, saveHistory: boolean) => {
+        setImageURL(url);
+        if (saveHistory) {
+            setImageURLHistory([...imageURLHistory, url]);
+            setCurrentHistoryIndex(currentHistoryIndex + 1);
+            console.log("Image URL History: ", imageURLHistory);
+            setOriginalImageURL(url);
+        }
     }
 
     const setProcessingCompleted = (value: boolean) => {
@@ -178,7 +197,7 @@ export default function LogoRemover() {
             setCroppedImageName(e?.target?.files[0].name.slice(0, -4) + '_cropped.png');
             const reader = new FileReader();
             reader.onload = function (event) {
-                setImageURL(event?.target?.result);
+                setImage(event?.target?.result, true);
                 setProcessingDone(false);
             };
             reader.readAsDataURL(e.target.files[0]);
@@ -197,6 +216,37 @@ export default function LogoRemover() {
         setRemoveBg(!removeBg);
     };
 
+    const undo = () => {
+        if (hasProcessingStarted) return;
+        if (imageURLHistory.length < 2) return;
+        if (currentHistoryIndex === 0) return;
+
+        const previousImage = imageURLHistory[currentHistoryIndex - 1];
+        setCurrentHistoryIndex(currentHistoryIndex - 1);
+
+        const copyHistory = [...imageURLHistory];
+        const removedItem = copyHistory.pop();
+        setImageURLHistory(copyHistory);
+        if (removedItem) setImageURLFuture([removedItem, ...imageURLFuture]);
+
+        console.log("Image URL History size: ", imageURLHistory.slice(0, currentHistoryIndex), "Image URL Future size: ", imageURLHistory.slice(currentHistoryIndex + 1), "popped: ", removedItem);
+        setImageURL(previousImage);
+        setCroppedImageDownloadURL(previousImage);
+    }
+
+    const redo = () => {
+        if (hasProcessingStarted) return;
+        if (imageURLFuture.length < 1) return;
+
+        const [removedItem, ...remainingItems] = imageURLFuture;
+        setImageURLFuture(remainingItems);
+        if (removedItem) setImageURLHistory([...imageURLHistory, removedItem]);
+
+        setCurrentHistoryIndex(currentHistoryIndex + 1);
+        setImageURL(removedItem);
+        setCroppedImageDownloadURL(removedItem);
+    }
+
     return (
         <main className={styles.main}>
             <div className={styles.image_settings}>
@@ -205,7 +255,7 @@ export default function LogoRemover() {
                 {!processingDone && !hasProcessingStarted &&
                     <input type="file" className={styles.file_input} onChange={handleFileChange}/>}
                 <canvas ref={canvasRef} className={styles.image_ref}/>
-                {!processingDone && !hasProcessingStarted && imageURL ? <div className={styles.image_config}>
+                {imageURL ? <div className={styles.image_config}>
                     <div>
                         Padding:
                         <input type="number" className={styles.number_input} value={padding}
@@ -229,6 +279,10 @@ export default function LogoRemover() {
                         <input type="checkbox" checked={removeBg} onClick={(e) => toggleRemoveBg()}/>
                     </div>
                     <button onClick={() => startProcessingImage(false)}>Start Processing</button>
+                    <div className={styles.history_buttons}>
+                        <button onClick={undo}>Undo</button>
+                        <button onClick={redo}>Redo</button>
+                    </div>
                 </div> : null}
                 {hasProcessingStarted && <p>Processing...</p>}
                 <div className={styles.processing_done}>
