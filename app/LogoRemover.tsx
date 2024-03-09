@@ -16,6 +16,7 @@ export default function LogoRemover() {
     const [removeBg, setRemoveBg] = useState<boolean>(false);
     const [backgroundRemoved, setBackgroundRemoved] = useState<boolean>(false);
     const [padding, setPadding] = useState<number>(0);
+    const [addedAlphaThreshold, setAddedAlphaThreshold] = useState<number>(0);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     let BGRemovalConfig : Config = {
@@ -149,7 +150,7 @@ export default function LogoRemover() {
     const detectEdges = (imageData: ImageData) => {
         let top = imageData.height, bottom = 0, left = imageData.width, right = 0;
 
-        const threshold = calculateAlphaThreshold(imageData);
+        const threshold = calculateAlphaThreshold(imageData) + addedAlphaThreshold;
         console.log("Threshold: ", threshold);
 
         // Iterate through pixels (consider row-major traversal for slight efficiency gain)
@@ -197,39 +198,49 @@ export default function LogoRemover() {
     };
 
     return (
-        <div>
-            <h1>Logo Edges Remover</h1>
-            <p>Remove the edges of a logo</p>
-            {!processingDone && !hasProcessingStarted && <input type="file" className={styles.file_input} onChange={handleFileChange}/>}
-            <canvas ref={canvasRef} className={styles.image_ref}/>
-            {!processingDone && !hasProcessingStarted && imageURL ? <div className={styles.image_config}>
-                <div>
-                    Padding:
-                    <input type="number" className={styles.number_input} value={padding}
-                           onChange={(e) => setPadding(parseInt(e.target.value))}/>
+        <main className={styles.main}>
+            <div className={styles.image_settings}>
+                <h1>Logo Edges Remover</h1>
+                <p>Remove the edges of a logo</p>
+                {!processingDone && !hasProcessingStarted &&
+                    <input type="file" className={styles.file_input} onChange={handleFileChange}/>}
+                <canvas ref={canvasRef} className={styles.image_ref}/>
+                {!processingDone && !hasProcessingStarted && imageURL ? <div className={styles.image_config}>
+                    <div>
+                        Padding:
+                        <input type="number" className={styles.number_input} value={padding}
+                               onChange={(e) => setPadding(parseInt(e.target.value))}/>
+                    </div>
+                    <div>
+                        Crop Image:
+                        <input type="checkbox" checked={cropImage} onClick={(e) => toggleCropImage()}/>
+                    </div>
+                    <div>
+                        Increase Alpha Threshold:
+                        <input type="number" className={styles.number_input} value={addedAlphaThreshold}
+                               onChange={(e) => setAddedAlphaThreshold(parseInt(e.target.value))}/>
+                    </div>
+                    <div>
+                        Force Square:
+                        <input type="checkbox" checked={forceSquare} onClick={(e) => toggleIsSquare()}/>
+                    </div>
+                    <div>
+                        Remove Logo Background:
+                        <input type="checkbox" checked={removeBg} onClick={(e) => toggleRemoveBg()}/>
+                    </div>
+                    <button onClick={() => startProcessingImage(false)}>Start Processing</button>
+                </div> : null}
+                {hasProcessingStarted && <p>Processing...</p>}
+                <div className={styles.processing_done}>
+                    {processingDone && <p>Image processing done!</p>}
+                    {croppedImageDownloadURL &&
+                        <a href={croppedImageDownloadURL} download={croppedImageName}>Download Cropped Image</a>}
                 </div>
-                <div>
-                    Crop Image:
-                    <input type="checkbox" checked={cropImage} onClick={(e) => toggleCropImage()}/>
-                </div>
-                <div>
-                    Force Square:
-                    <input type="checkbox" checked={forceSquare} onClick={(e) => toggleIsSquare()}/>
-                </div>
-                <div>
-                    Remove Logo Background:
-                    <input type="checkbox" checked={removeBg} onClick={(e) => toggleRemoveBg()}/>
-                </div>
-                <button onClick={() => startProcessingImage(false)}>Start Processing</button>
-            </div> : null}
-            {hasProcessingStarted && <p>Processing...</p>}
-            <div className={styles.processing_done}>
-                {processingDone && <p>Image processing done!</p>}
-                {croppedImageDownloadURL &&
-                    <a href={croppedImageDownloadURL} download={croppedImageName}>Download Cropped Image</a>}
             </div>
-            {imageURL && <img src={imageURL} className={styles.image} alt="image" width={croppedImageWidth}
-                              height={croppedImageHeight}/>}
-        </div>
+            <div className={styles.image_preview}>
+                {imageURL && <img src={imageURL} className={styles.image} alt="image" width={croppedImageWidth}
+                                  height={croppedImageHeight}/>}
+            </div>
+        </main>
     );
 }

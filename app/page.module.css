@@ -1,14 +1,17 @@
 .main {
+  justify-content: center;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6rem;
+  padding: 2rem;
+  width: 100vw;
   min-height: 100vh;
   background: #181818;
   --backgroundColor: rgba(255, 255, 255);
   --squareColor: rgba(100, 100, 100, .5);
   --squareSize: 1em;
+}
+
+.main div {
+  max-width: calc(var(--max-width) / 2);
 }
 
 .number_input {
@@ -65,11 +68,26 @@
 }
 
 .image {
-  border: .5rem solid black;
-  border-radius: 2rem;
+  border: .1rem solid black;
 }
 
+.image_settings {
+  width: 100%;
+}
 
+.image_preview {
+  width: 100%;
+  height: calc(100% - 4rem);
+  right: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image_preview img {
+  object-fit: contain;
+}
 
 
 
@@ -166,7 +184,6 @@
   font-size: 0.9rem;
   line-height: 1.5;
   max-width: 30ch;
-  text-wrap: balance;
 }
 
 .center {
