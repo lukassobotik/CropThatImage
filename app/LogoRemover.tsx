@@ -2,6 +2,8 @@
 import React, {useEffect, useRef, useState} from "react";
 import styles from "./page.module.css";
 import imglyRemoveBackground, {Config} from "@imgly/background-removal"
+import Checkbox from "@/checkbox";
+import DownloadButton from "@/downloadButton";
 
 export default function LogoRemover() {
     const [originalImageURL, setOriginalImageURL] = useState<any>(null);
@@ -29,6 +31,23 @@ export default function LogoRemover() {
             quality: 1,
         }
     }
+
+    useEffect(() => {
+        // Undo button
+        if (hasProcessingStarted || imageURLHistory.length < 2 || currentHistoryIndex === 0) {
+            disableButton(true, "undo_button");
+        } else {
+            disableButton(false, "undo_button");
+        }
+
+        // Redo button
+        if (hasProcessingStarted || imageURLFuture.length < 1) {
+            disableButton(true, "redo_button");
+            return;
+        } else {
+            disableButton(false, "redo_button");
+        }
+    }, [imageURLHistory, imageURLFuture]);
 
     useEffect(() => {
         if (!imageURL || hasProcessingStarted) return;
@@ -101,7 +120,6 @@ export default function LogoRemover() {
         if (saveHistory) {
             setImageURLHistory([...imageURLHistory, url]);
             setCurrentHistoryIndex(currentHistoryIndex + 1);
-            console.log("Image URL History: ", imageURLHistory);
             setOriginalImageURL(url);
         }
     }
@@ -123,7 +141,6 @@ export default function LogoRemover() {
         right = edges.right;
 
         // Cropping
-        console.log("forceSquare: ", forceSquare);
         let croppedWidth = (right - left) + (padding * 2);
         let croppedHeight = (bottom - top) + (padding * 2);
         let addedSquarePaddingToWidth = false;
@@ -170,7 +187,6 @@ export default function LogoRemover() {
         let top = imageData.height, bottom = 0, left = imageData.width, right = 0;
 
         const threshold = calculateAlphaThreshold(imageData) + addedAlphaThreshold;
-        console.log("Threshold: ", threshold);
 
         // Iterate through pixels (consider row-major traversal for slight efficiency gain)
         for (let y = 0; y < imageData.height; y++) {
@@ -217,10 +233,31 @@ export default function LogoRemover() {
         setRemoveBg(!removeBg);
     };
 
+    function disableButton(value : boolean, buttonId : string) {
+        if (value) {
+            const el = document.getElementById(buttonId);
+            if (el) {
+                el.style.color = 'grey';
+                el.style.cursor = 'initial';
+                el.style.pointerEvents = 'none';
+            }
+        } else {
+            const el = document.getElementById(buttonId);
+            if (el) {
+                el.style.color = 'white';
+                el.style.cursor = 'pointer';
+                el.style.pointerEvents = 'auto';
+            }
+        }
+    }
+
     const undo = () => {
-        if (hasProcessingStarted) return;
-        if (imageURLHistory.length < 2) return;
-        if (currentHistoryIndex === 0) return;
+        if (hasProcessingStarted || imageURLHistory.length < 2 || currentHistoryIndex === 0) {
+            disableButton(true, "undo_button");
+            return;
+        } else {
+            disableButton(false, "undo_button");
+        }
 
         const previousImage = imageURLHistory[currentHistoryIndex - 1];
         setCurrentHistoryIndex(currentHistoryIndex - 1);
@@ -230,14 +267,17 @@ export default function LogoRemover() {
         setImageURLHistory(copyHistory);
         if (removedItem) setImageURLFuture([removedItem, ...imageURLFuture]);
 
-        console.log("Image URL History size: ", imageURLHistory.slice(0, currentHistoryIndex), "Image URL Future size: ", imageURLHistory.slice(currentHistoryIndex + 1), "popped: ", removedItem);
         setImageURL(previousImage);
         setCroppedImageDownloadURL(previousImage);
     }
 
     const redo = () => {
-        if (hasProcessingStarted) return;
-        if (imageURLFuture.length < 1) return;
+        if (hasProcessingStarted || imageURLFuture.length < 1) {
+            disableButton(true, "redo_button");
+            return;
+        } else {
+            disableButton(false, "redo_button");
+        }
 
         const [removedItem, ...remainingItems] = imageURLFuture;
         setImageURLFuture(remainingItems);
@@ -249,53 +289,59 @@ export default function LogoRemover() {
     }
 
     return (
-        <main className={styles.main}>
+        <div className={styles.remover_parent}>
             <div className={styles.image_settings}>
                 <h1>Logo Edges Remover</h1>
                 <p>Remove the edges of a logo</p>
-                {!processingDone && !hasProcessingStarted &&
+                {!processingDone && !imageURL && !hasProcessingStarted &&
                     <input type="file" className={styles.file_input} onChange={handleFileChange}/>}
                 <canvas ref={canvasRef} className={styles.image_ref}/>
                 {imageURL ? <div className={styles.image_config}>
-                    <div>
+                    <div className={styles.number_input_parent}>
                         Padding:
                         <input type="number" className={styles.number_input} value={padding}
                                onChange={(e) => setPadding(parseInt(e.target.value))}/>
                     </div>
-                    <div>
-                        Crop Image:
-                        <input type="checkbox" checked={cropImage} onClick={(e) => toggleCropImage()}/>
+                    <div className={styles.checkbox_parent} onClick={toggleCropImage}>
+                        <span>Crop Image:</span>
+                        <Checkbox checked={cropImage} onChange={toggleCropImage}></Checkbox>
                     </div>
-                    <div>
+                    <div className={styles.number_input_parent}>
                         Increase Alpha Threshold:
                         <input type="number" className={styles.number_input} value={addedAlphaThreshold}
                                onChange={(e) => setAddedAlphaThreshold(parseInt(e.target.value))}/>
                     </div>
-                    <div>
-                        Force Square:
-                        <input type="checkbox" checked={forceSquare} onClick={(e) => toggleIsSquare()}/>
+                    <div className={styles.checkbox_parent} onClick={toggleIsSquare}>
+                        <span>Force Square:</span>
+                        <Checkbox checked={forceSquare} onChange={toggleIsSquare}></Checkbox>
                     </div>
-                    <div>
-                        Remove Logo Background:
-                        <input type="checkbox" checked={removeBg} onClick={(e) => toggleRemoveBg()}/>
+                    <div className={styles.checkbox_parent} onClick={toggleRemoveBg}>
+                        <span>Remove Logo Background:</span>
+                        <Checkbox checked={removeBg} onChange={toggleRemoveBg}></Checkbox>
                     </div>
-                    <button onClick={() => startProcessingImage(false)}>Start Processing</button>
+                    <button className={styles.button} onClick={() => startProcessingImage(false)}>
+                        <div className={styles.loader} style={{
+                            opacity: (hasProcessingStarted ? 1 : 0),
+                            left: (!hasProcessingStarted ? "-150%" : "")
+                        }}></div>
+                        <span style={{
+                            opacity: (!hasProcessingStarted ? 1 : 0),
+                            left: (hasProcessingStarted ? "-150%" : "")
+                        }}>Process Image</span>
+                    </button>
                     <div className={styles.history_buttons}>
-                        <button onClick={undo}>Undo</button>
-                        <button onClick={redo}>Redo</button>
+                        <button id="undo_button" className={styles.button} onClick={undo}>Undo</button>
+                        <button id="redo_button" className={styles.button} onClick={redo}>Redo</button>
                     </div>
                 </div> : null}
-                {hasProcessingStarted && <p>Processing...</p>}
-                <div className={styles.processing_done}>
-                    {processingDone && <p>Image processing done!</p>}
-                    {croppedImageDownloadURL &&
-                        <a href={croppedImageDownloadURL} download={croppedImageName}>Download Cropped Image</a>}
+                <div className={styles.download_button}>
+                    {croppedImageDownloadURL ? <DownloadButton url={croppedImageDownloadURL} filename={croppedImageName}/> : null}
                 </div>
             </div>
             <div className={styles.image_preview}>
                 {imageURL && <img src={imageURL} className={styles.image} alt="image" width={croppedImageWidth}
                                   height={croppedImageHeight}/>}
             </div>
-        </main>
+        </div>
     );
 }
