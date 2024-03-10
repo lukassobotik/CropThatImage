@@ -5,7 +5,7 @@ import imglyRemoveBackground, {Config} from "@imgly/background-removal"
 import Checkbox from "@/checkbox";
 import DownloadButton from "@/downloadButton";
 
-export default function LogoRemover() {
+export default function ImageCropper() {
     const [originalImageURL, setOriginalImageURL] = useState<any>(null);
     const [imageURL, setImageURL] = useState<any>(null);
     const [imageURLHistory, setImageURLHistory] = useState<string[]>([]);
@@ -291,8 +291,7 @@ export default function LogoRemover() {
     return (
         <div className={styles.remover_parent}>
             <div className={styles.image_settings}>
-                <h1>Logo Edges Remover</h1>
-                <p>Remove the edges of a logo</p>
+                <h1>Crop that Image!</h1>
                 {!processingDone && !imageURL && !hasProcessingStarted &&
                     <input type="file" className={styles.file_input} onChange={handleFileChange}/>}
                 <canvas ref={canvasRef} className={styles.image_ref}/>
