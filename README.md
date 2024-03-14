@@ -5,7 +5,7 @@
 <a href="https://cropthatimage.lukassobotik.dev">Try it Out</a> | <a href="https://www.buymeacoffee.com/lukassobotik">Support Me</a> | <a href="https://lukassobotik.dev/project/CropThatImage">Website</a> | <a href="https://github.com/lukassobotik/CropThatImage/blob/master/LICENSE">License</a>
 </p>
 
-## Overview
+### Overview
 This web application is designed to allow users to crop the edges of an image automatically.
 
 > [!WARNING]
