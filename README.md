@@ -7,3 +7,5 @@
 
 ### Overview
 This web application is designed to allow users to crop the edges of an image automatically.
+
+Built using TypeScript, Next.js & React. 
