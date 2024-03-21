@@ -6,4 +6,4 @@
 </p>
 
 ### Overview
-This web application is designed to allow users to crop the edges of an image automatically.
+This web application is designed to allow users to crop the edges of an image automatically. You can easily remove the background thanks to [@imgly/background-removal](https://www.npmjs.com/package/@imgly/background-removal).
