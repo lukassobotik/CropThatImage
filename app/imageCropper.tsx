@@ -4,6 +4,7 @@ import styles from "./page.module.css";
 import imglyRemoveBackground, {Config} from "@imgly/background-removal"
 import Checkbox from "@/checkbox";
 import DownloadButton from "@/downloadButton";
+import DragAndDrop from "@/dragAndDrop";
 
 export default function ImageCropper() {
     const [originalImageURL, setOriginalImageURL] = useState<any>(null);
@@ -206,10 +207,11 @@ export default function ImageCropper() {
         return { top, bottom, left, right };
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files !== null) {
-            console.log(e?.target?.files[0].name)
-            let name = e?.target?.files[0].name;
+    const handleFileSubmit = (files: any) => {
+        if (files.length === 0) {
+            // no file has been submitted
+        } else {
+            let name = files[0].name;
             name = name.split('.').slice(0, -1).join('.') + '_cropped.png';
             setCroppedImageName(name);
             const reader = new FileReader();
@@ -217,9 +219,9 @@ export default function ImageCropper() {
                 setImage(event?.target?.result, true);
                 setProcessingDone(false);
             };
-            reader.readAsDataURL(e.target.files[0]);
+            reader.readAsDataURL(files[0]);
         }
-    };
+    }
 
     const toggleCropImage = () => {
         setCropImage(!cropImage);
@@ -293,7 +295,7 @@ export default function ImageCropper() {
             <div className={styles.image_settings}>
                 <h1>Crop that Image!</h1>
                 {!processingDone && !imageURL && !hasProcessingStarted &&
-                    <input type="file" className={styles.file_input} onChange={handleFileChange}/>}
+                    <DragAndDrop onFileSubmit={handleFileSubmit} />}
                 <canvas ref={canvasRef} className={styles.image_ref}/>
                 {imageURL ? <div className={styles.image_config}>
                     <div className={styles.number_input_parent}>
