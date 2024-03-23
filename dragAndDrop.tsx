@@ -57,7 +57,6 @@ export default function DragAndDrop({onFileSubmit} : {onFileSubmit : any}) {
     }
 
     function removeFile(fileName: any, idx: any) {
-        console.log("removing file", fileName);
         const newArr = [...files];
         newArr.splice(idx, 1);
         setFiles([]);
@@ -65,7 +64,6 @@ export default function DragAndDrop({onFileSubmit} : {onFileSubmit : any}) {
     }
 
     function openFileExplorer() {
-        console.log("open file explorer")
         inputRef.current.value = "";
         inputRef.current.click();
     }
