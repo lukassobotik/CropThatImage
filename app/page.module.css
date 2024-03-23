@@ -227,3 +227,7 @@
   display: flex;
   justify-content: center;
 }
+
+.tooltip {
+  z-index: 100;
+}

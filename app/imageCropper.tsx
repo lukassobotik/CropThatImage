@@ -5,6 +5,8 @@ import imglyRemoveBackground, {Config} from "@imgly/background-removal"
 import Checkbox from "@/checkbox";
 import DownloadButton from "@/downloadButton";
 import DragAndDrop from "@/dragAndDrop";
+import 'react-tooltip/dist/react-tooltip.css';
+import { Tooltip } from 'react-tooltip';
 
 export default function ImageCropper() {
     const [originalImageURL, setOriginalImageURL] = useState<any>(null);
@@ -299,25 +301,41 @@ export default function ImageCropper() {
                 <canvas ref={canvasRef} className={styles.image_ref}/>
                 {imageURL ? <div className={styles.image_config}>
                     <div className={styles.number_input_parent}>
-                        Padding:
+                        <span data-tooltip-id="padding-tooltip"
+                              data-tooltip-content="Padding is the amount of space around the cropped image (in pixels)."
+                              data-tooltip-place="top-start">Padding:</span>
+                        <Tooltip className={styles.tooltip} id="padding-tooltip" place="top-start" />
                         <input type="number" className={styles.number_input} value={padding}
                                onChange={(e) => setPadding(parseInt(e.target.value))}/>
                     </div>
                     <div className={styles.checkbox_parent} onClick={toggleCropImage}>
-                        <span>Crop Image:</span>
+                        <span data-tooltip-id="crop-tooltip"
+                              data-tooltip-content="Select whether you want to crop the image or not."
+                              data-tooltip-place="top-start">Crop Image:</span>
+                        <Tooltip className={styles.tooltip} id="crop-tooltip" place="top-start"/>
                         <Checkbox checked={cropImage} onChange={toggleCropImage}></Checkbox>
                     </div>
                     <div className={styles.number_input_parent}>
-                        Increase Alpha Threshold:
+                        <span data-tooltip-id="alpha-thershold-tooltip"
+                              data-tooltip-content="Increase or decrease the alpha threshold to make the cropping more or less sensitive. Default is 0.
+                              This value is added to the mean alpha value of the image. Maximum value should be 255 (including the automaticly calculated mean alpha)."
+                              data-tooltip-place="top-start">Increase Alpha Threshold:</span>
+                        <Tooltip className={styles.tooltip} id="alpha-thershold-tooltip" place="top-start"/>
                         <input type="number" className={styles.number_input} value={addedAlphaThreshold}
                                onChange={(e) => setAddedAlphaThreshold(parseInt(e.target.value))}/>
                     </div>
                     <div className={styles.checkbox_parent} onClick={toggleIsSquare}>
-                        <span>Force Square:</span>
+                        <span data-tooltip-id="square-tooltip"
+                              data-tooltip-content="Select whether you want the cropped image to be a square or not."
+                              data-tooltip-place="top-start">Force Square:</span>
+                        <Tooltip className={styles.tooltip} id="square-tooltip" place="top-start"/>
                         <Checkbox checked={forceSquare} onChange={toggleIsSquare}></Checkbox>
                     </div>
                     <div className={styles.checkbox_parent} onClick={toggleRemoveBg}>
-                        <span>Remove Logo Background:</span>
+                        <span data-tooltip-id="remove-bg-tooltip"
+                              data-tooltip-content="Select whether you want to remove the background of the image or not. This will use the Img.ly Background Removal API."
+                              data-tooltip-place="top-start">Remove Logo Background:</span>
+                        <Tooltip className={styles.tooltip} id="remove-bg-tooltip" place="top-start"/>
                         <Checkbox checked={removeBg} onChange={toggleRemoveBg}></Checkbox>
                     </div>
                     <button className={styles.button} onClick={() => startProcessingImage(false)}>
