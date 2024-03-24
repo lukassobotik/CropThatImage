@@ -7,3 +7,5 @@
 
 ### Overview
 This web application is designed to allow users to crop the edges of an image automatically. You can easily remove the background thanks to [@imgly/background-removal](https://www.npmjs.com/package/@imgly/background-removal).
+
+Instantly remove wasted space from your images. Automatic cropping, [background removal](https://www.npmjs.com/package/@imgly/background-removal), square formatting, and padding for a perfectly polished look.
