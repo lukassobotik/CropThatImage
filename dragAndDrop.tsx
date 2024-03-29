@@ -104,7 +104,7 @@ export default function DragAndDrop({onFileSubmit} : {onFileSubmit : any}) {
                         <div key={idx} className={styles.file}>
                             <div>{file.name}</div>
                             <span onClick={() => removeFile(file.name, idx)}>
-                                remove
+                                Remove
                             </span>
                         </div>
                     ))}

@@ -6,7 +6,7 @@ import Checkbox from "@/checkbox";
 import DownloadButton from "@/downloadButton";
 import DragAndDrop from "@/dragAndDrop";
 import 'react-tooltip/dist/react-tooltip.css';
-import { Tooltip } from 'react-tooltip';
+import {Tooltip} from 'react-tooltip';
 
 export default function ImageCropper() {
     const [originalImageURL, setOriginalImageURL] = useState<any>(null);
@@ -106,18 +106,17 @@ export default function ImageCropper() {
             }
 
             let currentCanvas = canvas;
-            let currentCtx : CanvasRenderingContext2D | null = ctx;
             if (cropImage) {
                 console.log("Cropping Image");
                 const croppedCanvas = cropToEdges(img, ctx, canvas);
                 if (croppedCanvas !== undefined) {
                     currentCanvas = croppedCanvas;
-                    currentCtx = croppedCanvas.getContext('2d');
                 }
-            }
+            } // TODO: else if (!cropImage && forceSquare) just add padding to make it square
 
             if (padding > 0) {
-                const processed = addPaddingIfPossible(img, currentCanvas);
+                console.log("Adding Padding");
+                const processed = addPaddingIfPossible(currentCanvas);
                 if (processed !== undefined) {
                     currentCanvas = processed;
                 }
@@ -146,24 +145,22 @@ export default function ImageCropper() {
         setHasProcessingStarted(!value);
     }
 
-    const addPaddingIfPossible = (img: HTMLImageElement, canvas: HTMLCanvasElement) => {
+    const addPaddingIfPossible = (canvas: HTMLCanvasElement) => {
         if (padding === 0) return;
 
         let croppedWidth = canvas.width + (padding * 2);
         let croppedHeight = canvas.height + (padding * 2);
-        console.log("Cropped Width", croppedWidth, "Cropped Height", croppedHeight);
-
 
         const croppedCanvas = document.createElement('canvas');
         const croppedCtx = croppedCanvas.getContext('2d');
         if (!croppedCtx) return; // Handle potential canvas issue
+
         croppedCanvas.width = croppedWidth;
         croppedCanvas.height = croppedHeight;
-        console.log("cropped aaaaaaa", croppedWidth, croppedHeight, padding, "Original", canvas.width, canvas.height, "Cropped", croppedCanvas.width, croppedCanvas.height);
+
         setCroppedImageWidth(croppedWidth);
         setCroppedImageHeight(croppedHeight);
-        croppedCtx.drawImage(img, 0, 0, croppedWidth, croppedHeight, padding, padding, croppedWidth, croppedHeight);
-        // croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 + padding : padding, addedSquarePaddingToHeight ? addedSquarePadding / 2 + padding : padding, croppedWidth, croppedHeight);
+        croppedCtx.drawImage(canvas, 0, 0, croppedWidth, croppedHeight, padding, padding, croppedWidth, croppedHeight);
 
         return croppedCanvas;
     }
@@ -172,7 +169,7 @@ export default function ImageCropper() {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
         // Boundary Detection
-        let top = imageData.height, bottom = 0, left = imageData.width, right = 0;
+        let top: number, bottom: number, left: number, right: number;
         const edges = detectEdges(imageData);
         top = edges.top;
         bottom = edges.bottom;
@@ -201,7 +198,6 @@ export default function ImageCropper() {
         setCroppedImageWidth(croppedWidth);
         setCroppedImageHeight(croppedHeight);
         croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 : 0, addedSquarePaddingToHeight ? addedSquarePadding / 2  : 0, croppedWidth, croppedHeight);
-        const croppedImageData = croppedCtx.getImageData(left, top, croppedWidth, croppedHeight);
 
         return croppedCanvas;
     }
