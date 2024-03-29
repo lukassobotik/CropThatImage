@@ -105,14 +105,28 @@ export default function ImageCropper() {
                 return;
             }
 
-            console.log("Cropping Image");
+            let currentCanvas = canvas;
+            let currentCtx : CanvasRenderingContext2D | null = ctx;
+            if (cropImage) {
+                console.log("Cropping Image");
+                const croppedCanvas = cropToEdges(img, ctx, canvas);
+                if (croppedCanvas !== undefined) {
+                    currentCanvas = croppedCanvas;
+                    currentCtx = croppedCanvas.getContext('2d');
+                }
+            }
 
-            const croppedCanvas = cropToEdges(img, ctx, canvas);
-            if (croppedCanvas === undefined) return;
+            if (padding > 0) {
+                const processed = addPaddingIfPossible(img, currentCanvas);
+                if (processed !== undefined) {
+                    currentCanvas = processed;
+                }
+            }
 
-            setImage(croppedCanvas.toDataURL(), true);
+            setImage(currentCanvas.toDataURL(), true);
             setProcessingCompleted(true);
-            setCroppedImageDownloadURL(croppedCanvas.toDataURL('image/png'));
+            setCroppedImageDownloadURL(currentCanvas.toDataURL('image/png'));
+            return;
         };
 
         img.src = currentImageURL;
@@ -132,6 +146,28 @@ export default function ImageCropper() {
         setHasProcessingStarted(!value);
     }
 
+    const addPaddingIfPossible = (img: HTMLImageElement, canvas: HTMLCanvasElement) => {
+        if (padding === 0) return;
+
+        let croppedWidth = canvas.width + (padding * 2);
+        let croppedHeight = canvas.height + (padding * 2);
+        console.log("Cropped Width", croppedWidth, "Cropped Height", croppedHeight);
+
+
+        const croppedCanvas = document.createElement('canvas');
+        const croppedCtx = croppedCanvas.getContext('2d');
+        if (!croppedCtx) return; // Handle potential canvas issue
+        croppedCanvas.width = croppedWidth;
+        croppedCanvas.height = croppedHeight;
+        console.log("cropped aaaaaaa", croppedWidth, croppedHeight, padding, "Original", canvas.width, canvas.height, "Cropped", croppedCanvas.width, croppedCanvas.height);
+        setCroppedImageWidth(croppedWidth);
+        setCroppedImageHeight(croppedHeight);
+        croppedCtx.drawImage(img, 0, 0, croppedWidth, croppedHeight, padding, padding, croppedWidth, croppedHeight);
+        // croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 + padding : padding, addedSquarePaddingToHeight ? addedSquarePadding / 2 + padding : padding, croppedWidth, croppedHeight);
+
+        return croppedCanvas;
+    }
+
     const cropToEdges = (img: HTMLImageElement, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
@@ -144,8 +180,8 @@ export default function ImageCropper() {
         right = edges.right;
 
         // Cropping
-        let croppedWidth = (right - left) + (padding * 2);
-        let croppedHeight = (bottom - top) + (padding * 2);
+        let croppedWidth = (right - left);
+        let croppedHeight = (bottom - top);
         let addedSquarePaddingToWidth = false;
         let addedSquarePaddingToHeight = false;
         let addedSquarePadding = 0;
@@ -164,7 +200,7 @@ export default function ImageCropper() {
         croppedCanvas.height = croppedHeight;
         setCroppedImageWidth(croppedWidth);
         setCroppedImageHeight(croppedHeight);
-        croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 + padding : padding, addedSquarePaddingToHeight ? addedSquarePadding / 2 + padding : padding, croppedWidth, croppedHeight);
+        croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 : 0, addedSquarePaddingToHeight ? addedSquarePadding / 2  : 0, croppedWidth, croppedHeight);
         const croppedImageData = croppedCtx.getImageData(left, top, croppedWidth, croppedHeight);
 
         return croppedCanvas;
