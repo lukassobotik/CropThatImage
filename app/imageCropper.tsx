@@ -170,15 +170,30 @@ export default function ImageCropper() {
 
         // Boundary Detection
         let top: number, bottom: number, left: number, right: number;
+        // TODO: If the image has no empty space around it, the function will not work as expected. It flips the left and right, top and bottom values for some reason.
         const edges = detectEdges(imageData);
-        top = edges.top;
-        bottom = edges.bottom;
-        left = edges.left;
-        right = edges.right;
+        top = edges.topBoundary;
+        bottom = edges.bottomBoundary;
+        left = edges.leftBoundary;
+        right = edges.rightBoundary;
 
         // Cropping
-        let croppedWidth = (right - left);
-        let croppedHeight = (bottom - top);
+        let croppedWidth = right - left;
+        let croppedHeight = bottom - top;
+        // If the image is already cropped to the edges, return the original image
+        if (croppedWidth < 0) {
+            console.log("Image width is already cropped to the edges");
+            croppedWidth = Math.abs(croppedWidth);
+            right = left;
+            left = right - croppedWidth;
+        }
+        if (croppedHeight < 0) {
+            console.log("Image height is already cropped to the edges");
+            croppedHeight = Math.abs(croppedHeight);
+            bottom = top;
+            top = bottom - croppedHeight;
+        }
+
         let addedSquarePaddingToWidth = false;
         let addedSquarePaddingToHeight = false;
         let addedSquarePadding = 0;
@@ -190,13 +205,16 @@ export default function ImageCropper() {
             croppedWidth = maxDimension;
             croppedHeight = maxDimension;
         }
+
         const croppedCanvas = document.createElement('canvas');
         const croppedCtx = croppedCanvas.getContext('2d');
         if (!croppedCtx) return; // Handle potential canvas issue
+
         croppedCanvas.width = croppedWidth;
         croppedCanvas.height = croppedHeight;
         setCroppedImageWidth(croppedWidth);
-        setCroppedImageHeight(croppedHeight);
+        setCroppedImageHeight(croppedHeight)
+
         croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 : 0, addedSquarePaddingToHeight ? addedSquarePadding / 2  : 0, croppedWidth, croppedHeight);
 
         return croppedCanvas;
@@ -219,7 +237,7 @@ export default function ImageCropper() {
     }
 
     const detectEdges = (imageData: ImageData) => {
-        let top = imageData.height, bottom = 0, left = imageData.width, right = 0;
+        let topBoundary = imageData.height, bottomBoundary = 0, leftBoundary = imageData.width, rightBoundary = 0;
 
         const threshold = calculateAlphaThreshold(imageData) + addedAlphaThreshold;
 
@@ -230,15 +248,16 @@ export default function ImageCropper() {
                 const alpha = imageData.data[alphaIndex];
 
                 if (alpha > threshold) { // Adjust transparency threshold if needed
-                    top = Math.min(top, y);
-                    bottom = Math.max(bottom, y);
-                    left = Math.min(left, x);
-                    right = Math.max(right, x);
+                    topBoundary = Math.min(topBoundary, y);
+                    bottomBoundary = Math.max(bottomBoundary, y);
+                    leftBoundary = Math.min(leftBoundary, x);
+                    rightBoundary = Math.max(rightBoundary, x);
                 }
             }
         }
 
-        return { top, bottom, left, right };
+        console.log("Top: " + topBoundary + " Bottom: " + bottomBoundary + " Left: " + leftBoundary + " Right: " + rightBoundary)
+        return { topBoundary: topBoundary, bottomBoundary: bottomBoundary, leftBoundary: leftBoundary, rightBoundary: rightBoundary };
     };
 
     const handleFileSubmit = (files: any) => {
