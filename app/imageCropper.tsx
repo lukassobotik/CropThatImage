@@ -112,7 +112,18 @@ export default function ImageCropper() {
                 if (croppedCanvas !== undefined) {
                     currentCanvas = croppedCanvas;
                 }
-            } // TODO: else if (!cropImage && forceSquare) just add padding to make it square
+            } else if (!cropImage && forceSquare) {
+                console.log("Forcing Square");
+                const maxDimension = Math.max(currentCanvas.width, currentCanvas.height);
+                const squareCanvas = document.createElement('canvas');
+                const squareCtx = squareCanvas.getContext('2d');
+                if (!squareCtx) return; // Handle potential canvas issue
+
+                squareCanvas.width = maxDimension;
+                squareCanvas.height = maxDimension;
+                squareCtx.drawImage(currentCanvas, 0, 0, currentCanvas.width, currentCanvas.height, (maxDimension - currentCanvas.width) / 2, (maxDimension - currentCanvas.height) / 2, currentCanvas.width, currentCanvas.height);
+                currentCanvas = squareCanvas;
+            }
 
             if (padding > 0) {
                 console.log("Adding Padding");
