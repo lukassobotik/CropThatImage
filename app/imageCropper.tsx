@@ -8,8 +8,9 @@ import DragAndDrop from "@/dragAndDrop";
 import 'react-tooltip/dist/react-tooltip.css';
 import {Tooltip} from 'react-tooltip';
 
-export default function ImageCropper() {
+export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
     const [originalImageURL, setOriginalImageURL] = useState<any>(null);
+    const [originalName, setOriginalName] = useState<string>('');
     const [imageURL, setImageURL] = useState<any>(null);
     const [imageURLHistory, setImageURLHistory] = useState<string[]>([]);
     const [imageURLFuture, setImageURLFuture] = useState<string[]>([]);
@@ -71,6 +72,10 @@ export default function ImageCropper() {
             setCroppedImageDownloadURL(imageURL);
         }
     }, [backgroundRemoved]);
+
+    useEffect(() => {
+        handleFileSubmit(onFileSubmit);
+    }, [onFileSubmit]);
 
     const startProcessingImage = (ignoreRemoveBg: boolean) => {
         if (!imageURL || !originalImageURL) return;
@@ -276,7 +281,9 @@ export default function ImageCropper() {
         if (files.length === 0) {
             // no file has been submitted
         } else {
-            let name = files[0].name;
+            let file = Array.isArray(files) ? files[0] : files;
+            let name = file.name;
+            setOriginalName(name);
             name = name.split('.').slice(0, -1).join('.') + '_cropped.png';
             setCroppedImageName(name);
             const reader = new FileReader();
@@ -284,7 +291,7 @@ export default function ImageCropper() {
                 setImage(event?.target?.result, true);
                 setProcessingDone(false);
             };
-            reader.readAsDataURL(files[0]);
+            reader.readAsDataURL(file);
         }
     }
 
@@ -358,9 +365,7 @@ export default function ImageCropper() {
     return (
         <div className={styles.remover_parent}>
             <div className={styles.image_settings}>
-                <h1>Crop that Image!</h1>
-                {!processingDone && !imageURL && !hasProcessingStarted &&
-                    <DragAndDrop onFileSubmit={handleFileSubmit} />}
+                <h1>{originalName ? originalName : "Crop that Image!"}</h1>
                 <canvas ref={canvasRef} className={styles.image_ref}/>
                 {imageURL ? <div className={styles.image_config}>
                     <div className={styles.number_input_parent}>

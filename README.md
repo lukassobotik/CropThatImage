@@ -1,4 +1,4 @@
-<div align="center"><img style="align:center;" src="./app/logo-240px.png" alt="Logo" width="100" /></div>
+<div align="center"><img style="align:center;" src="./public/logo-240px.png" alt="Logo" width="100" /></div>
 <h1 align="center">Crop That Image!</h1>
 <h3 align="center">Automatically crop the edges of an Image!</h3>
 <p align="center">
