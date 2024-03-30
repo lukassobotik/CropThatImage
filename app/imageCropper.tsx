@@ -66,6 +66,8 @@ export default function ImageCropper() {
             startProcessingImage(true);
         } else if (backgroundRemoved && !cropImage) {
             setProcessingCompleted(true);
+            setBackgroundRemoved(false);
+            setRemoveBg(false);
             setCroppedImageDownloadURL(imageURL);
         }
     }, [backgroundRemoved]);
@@ -135,6 +137,7 @@ export default function ImageCropper() {
 
             setImage(currentCanvas.toDataURL(), true);
             setProcessingCompleted(true);
+            setBackgroundRemoved(false);
             setCroppedImageDownloadURL(currentCanvas.toDataURL('image/png'));
             return;
         };
@@ -250,13 +253,13 @@ export default function ImageCropper() {
             return { topBoundary: topBoundary, bottomBoundary: bottomBoundary, leftBoundary: leftBoundary, rightBoundary: rightBoundary };
         }
 
-        // Iterate through pixels (consider row-major traversal for slight efficiency gain)
+        // Iterate through pixels
         for (let y = 0; y < imageData.height; y++) {
             for (let x = 0; x < imageData.width; x++) {
                 const alphaIndex = (y * imageData.width + x) * 4 + 3;
                 const alpha = imageData.data[alphaIndex];
 
-                if (alpha > threshold) { // Adjust transparency threshold if needed
+                if (alpha > threshold) {
                     topBoundary = Math.min(topBoundary, y);
                     bottomBoundary = Math.max(bottomBoundary, y);
                     leftBoundary = Math.min(leftBoundary, x);
