@@ -179,7 +179,6 @@ export default function ImageCropper() {
         // Cropping
         let croppedWidth = right - left;
         let croppedHeight = bottom - top;
-        // If the image is already cropped to the edges, return the original image
         if (croppedWidth < 0) {
             console.log("Image width is already cropped to the edges");
             croppedWidth = Math.abs(croppedWidth);
