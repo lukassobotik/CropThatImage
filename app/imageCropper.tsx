@@ -170,7 +170,6 @@ export default function ImageCropper() {
 
         // Boundary Detection
         let top: number, bottom: number, left: number, right: number;
-        // TODO: If the image has no empty space around it, the function will not work as expected. It flips the left and right, top and bottom values for some reason.
         const edges = detectEdges(imageData);
         top = edges.topBoundary;
         bottom = edges.bottomBoundary;
@@ -220,26 +219,26 @@ export default function ImageCropper() {
         return croppedCanvas;
     }
 
-    const calculateAlphaThreshold = (imageData: ImageData): number => {
-        const alphaValues: number[] = [];
+    const calculateMeanAlpha = (imageData: ImageData): number => {
+        let alphaSum = 0;
+        const totalPixels = imageData.data.length / 4; // Assuming RGBA
 
-        for (let y = 0; y < imageData.height; y++) {
-            for (let x = 0; x < imageData.width; x++) {
-                const alphaIndex = (y * imageData.width + x) * 4 + 3;
-                alphaValues.push(imageData.data[alphaIndex]);
-            }
+        for (let i = 3; i < imageData.data.length; i += 4) {
+            alphaSum += imageData.data[i];
         }
 
-        const meanAlpha = alphaValues.reduce((a, b) => a + b, 0) / alphaValues.length;
-        const stdAlpha = Math.sqrt(alphaValues.map(x => Math.pow(x - meanAlpha, 2)).reduce((a, b) => a + b) / alphaValues.length);
-
-        return meanAlpha + stdAlpha; // You can adjust sensitivity by adding a multiplier
+        return alphaSum / totalPixels;
     }
 
     const detectEdges = (imageData: ImageData) => {
         let topBoundary = imageData.height, bottomBoundary = 0, leftBoundary = imageData.width, rightBoundary = 0;
 
-        const threshold = calculateAlphaThreshold(imageData) + addedAlphaThreshold;
+        const threshold = calculateMeanAlpha(imageData) + addedAlphaThreshold;
+
+        if (threshold >= 255) {
+            console.log(`Threshold ${threshold} exceeds the limit of 255, returning original image`);
+            return { topBoundary: topBoundary, bottomBoundary: bottomBoundary, leftBoundary: leftBoundary, rightBoundary: rightBoundary };
+        }
 
         // Iterate through pixels (consider row-major traversal for slight efficiency gain)
         for (let y = 0; y < imageData.height; y++) {
