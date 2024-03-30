@@ -6,7 +6,7 @@ import Checkbox from "@/checkbox";
 import DownloadButton from "@/downloadButton";
 import DragAndDrop from "@/dragAndDrop";
 import 'react-tooltip/dist/react-tooltip.css';
-import { Tooltip } from 'react-tooltip';
+import {Tooltip} from 'react-tooltip';
 
 export default function ImageCropper() {
     const [originalImageURL, setOriginalImageURL] = useState<any>(null);
@@ -66,6 +66,8 @@ export default function ImageCropper() {
             startProcessingImage(true);
         } else if (backgroundRemoved && !cropImage) {
             setProcessingCompleted(true);
+            setBackgroundRemoved(false);
+            setRemoveBg(false);
             setCroppedImageDownloadURL(imageURL);
         }
     }, [backgroundRemoved]);
@@ -105,14 +107,39 @@ export default function ImageCropper() {
                 return;
             }
 
-            console.log("Cropping Image");
+            let currentCanvas = canvas;
+            if (cropImage) {
+                console.log("Cropping Image");
+                const croppedCanvas = cropToEdges(img, ctx, canvas);
+                if (croppedCanvas !== undefined) {
+                    currentCanvas = croppedCanvas;
+                }
+            } else if (!cropImage && forceSquare) {
+                console.log("Forcing Square");
+                const maxDimension = Math.max(currentCanvas.width, currentCanvas.height);
+                const squareCanvas = document.createElement('canvas');
+                const squareCtx = squareCanvas.getContext('2d');
+                if (!squareCtx) return; // Handle potential canvas issue
 
-            const croppedCanvas = cropToEdges(img, ctx, canvas);
-            if (croppedCanvas === undefined) return;
+                squareCanvas.width = maxDimension;
+                squareCanvas.height = maxDimension;
+                squareCtx.drawImage(currentCanvas, 0, 0, currentCanvas.width, currentCanvas.height, (maxDimension - currentCanvas.width) / 2, (maxDimension - currentCanvas.height) / 2, currentCanvas.width, currentCanvas.height);
+                currentCanvas = squareCanvas;
+            }
 
-            setImage(croppedCanvas.toDataURL(), true);
+            if (padding > 0) {
+                console.log("Adding Padding");
+                const processed = addPaddingIfPossible(currentCanvas);
+                if (processed !== undefined) {
+                    currentCanvas = processed;
+                }
+            }
+
+            setImage(currentCanvas.toDataURL(), true);
             setProcessingCompleted(true);
-            setCroppedImageDownloadURL(croppedCanvas.toDataURL('image/png'));
+            setBackgroundRemoved(false);
+            setCroppedImageDownloadURL(currentCanvas.toDataURL('image/png'));
+            return;
         };
 
         img.src = currentImageURL;
@@ -132,20 +159,53 @@ export default function ImageCropper() {
         setHasProcessingStarted(!value);
     }
 
+    const addPaddingIfPossible = (canvas: HTMLCanvasElement) => {
+        if (padding === 0) return;
+
+        let croppedWidth = canvas.width + (padding * 2);
+        let croppedHeight = canvas.height + (padding * 2);
+
+        const croppedCanvas = document.createElement('canvas');
+        const croppedCtx = croppedCanvas.getContext('2d');
+        if (!croppedCtx) return; // Handle potential canvas issue
+
+        croppedCanvas.width = croppedWidth;
+        croppedCanvas.height = croppedHeight;
+
+        setCroppedImageWidth(croppedWidth);
+        setCroppedImageHeight(croppedHeight);
+        croppedCtx.drawImage(canvas, 0, 0, croppedWidth, croppedHeight, padding, padding, croppedWidth, croppedHeight);
+
+        return croppedCanvas;
+    }
+
     const cropToEdges = (img: HTMLImageElement, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
         // Boundary Detection
-        let top = imageData.height, bottom = 0, left = imageData.width, right = 0;
+        let top: number, bottom: number, left: number, right: number;
         const edges = detectEdges(imageData);
-        top = edges.top;
-        bottom = edges.bottom;
-        left = edges.left;
-        right = edges.right;
+        top = edges.topBoundary;
+        bottom = edges.bottomBoundary;
+        left = edges.leftBoundary;
+        right = edges.rightBoundary;
 
         // Cropping
-        let croppedWidth = (right - left) + (padding * 2);
-        let croppedHeight = (bottom - top) + (padding * 2);
+        let croppedWidth = right - left;
+        let croppedHeight = bottom - top;
+        if (croppedWidth < 0) {
+            console.log("Image width is already cropped to the edges");
+            croppedWidth = Math.abs(croppedWidth);
+            right = left;
+            left = right - croppedWidth;
+        }
+        if (croppedHeight < 0) {
+            console.log("Image height is already cropped to the edges");
+            croppedHeight = Math.abs(croppedHeight);
+            bottom = top;
+            top = bottom - croppedHeight;
+        }
+
         let addedSquarePaddingToWidth = false;
         let addedSquarePaddingToHeight = false;
         let addedSquarePadding = 0;
@@ -157,56 +217,59 @@ export default function ImageCropper() {
             croppedWidth = maxDimension;
             croppedHeight = maxDimension;
         }
+
         const croppedCanvas = document.createElement('canvas');
         const croppedCtx = croppedCanvas.getContext('2d');
         if (!croppedCtx) return; // Handle potential canvas issue
+
         croppedCanvas.width = croppedWidth;
         croppedCanvas.height = croppedHeight;
         setCroppedImageWidth(croppedWidth);
-        setCroppedImageHeight(croppedHeight);
-        croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 + padding : padding, addedSquarePaddingToHeight ? addedSquarePadding / 2 + padding : padding, croppedWidth, croppedHeight);
-        const croppedImageData = croppedCtx.getImageData(left, top, croppedWidth, croppedHeight);
+        setCroppedImageHeight(croppedHeight)
+
+        croppedCtx.drawImage(img, left, top, croppedWidth, croppedHeight, addedSquarePaddingToWidth ? addedSquarePadding / 2 : 0, addedSquarePaddingToHeight ? addedSquarePadding / 2  : 0, croppedWidth, croppedHeight);
 
         return croppedCanvas;
     }
 
-    const calculateAlphaThreshold = (imageData: ImageData): number => {
-        const alphaValues: number[] = [];
+    const calculateMeanAlpha = (imageData: ImageData): number => {
+        let alphaSum = 0;
+        const totalPixels = imageData.data.length / 4; // Assuming RGBA
 
-        for (let y = 0; y < imageData.height; y++) {
-            for (let x = 0; x < imageData.width; x++) {
-                const alphaIndex = (y * imageData.width + x) * 4 + 3;
-                alphaValues.push(imageData.data[alphaIndex]);
-            }
+        for (let i = 3; i < imageData.data.length; i += 4) {
+            alphaSum += imageData.data[i];
         }
 
-        const meanAlpha = alphaValues.reduce((a, b) => a + b, 0) / alphaValues.length;
-        const stdAlpha = Math.sqrt(alphaValues.map(x => Math.pow(x - meanAlpha, 2)).reduce((a, b) => a + b) / alphaValues.length);
-
-        return meanAlpha + stdAlpha; // You can adjust sensitivity by adding a multiplier
+        return alphaSum / totalPixels;
     }
 
     const detectEdges = (imageData: ImageData) => {
-        let top = imageData.height, bottom = 0, left = imageData.width, right = 0;
+        let topBoundary = imageData.height, bottomBoundary = 0, leftBoundary = imageData.width, rightBoundary = 0;
 
-        const threshold = calculateAlphaThreshold(imageData) + addedAlphaThreshold;
+        const threshold = calculateMeanAlpha(imageData) + addedAlphaThreshold;
 
-        // Iterate through pixels (consider row-major traversal for slight efficiency gain)
+        if (threshold >= 255) {
+            console.log(`Threshold ${threshold} exceeds the limit of 255, returning original image`);
+            return { topBoundary: topBoundary, bottomBoundary: bottomBoundary, leftBoundary: leftBoundary, rightBoundary: rightBoundary };
+        }
+
+        // Iterate through pixels
         for (let y = 0; y < imageData.height; y++) {
             for (let x = 0; x < imageData.width; x++) {
                 const alphaIndex = (y * imageData.width + x) * 4 + 3;
                 const alpha = imageData.data[alphaIndex];
 
-                if (alpha > threshold) { // Adjust transparency threshold if needed
-                    top = Math.min(top, y);
-                    bottom = Math.max(bottom, y);
-                    left = Math.min(left, x);
-                    right = Math.max(right, x);
+                if (alpha > threshold) {
+                    topBoundary = Math.min(topBoundary, y);
+                    bottomBoundary = Math.max(bottomBoundary, y);
+                    leftBoundary = Math.min(leftBoundary, x);
+                    rightBoundary = Math.max(rightBoundary, x);
                 }
             }
         }
 
-        return { top, bottom, left, right };
+        console.log("Top: " + topBoundary + " Bottom: " + bottomBoundary + " Left: " + leftBoundary + " Right: " + rightBoundary)
+        return { topBoundary: topBoundary, bottomBoundary: bottomBoundary, leftBoundary: leftBoundary, rightBoundary: rightBoundary };
     };
 
     const handleFileSubmit = (files: any) => {
