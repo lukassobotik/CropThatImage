@@ -17,6 +17,7 @@ export default function Home() {
 
     return (
         <main className={styles.main}>
+            <Navbar/>
             {!submitted ? <DragAndDrop onFileSubmit={handleFileSubmit}></DragAndDrop> : null}
             {files.length > 0 ? files.map((file: any, id: number) => {
                 return (
@@ -25,7 +26,6 @@ export default function Home() {
                     </div>
                 );
             }) : null}
-            {/*<ImageCropper onFileSubmit={files}/>*/}
             <div className={styles.footer}>
                 <div className={styles.socials}>
                     <a href="https://github.com/lukassobotik/CropThatImage" className={styles.social_link}>
