@@ -16,3 +16,17 @@
     border-radius: .75rem;
     cursor: pointer;
 }
+
+.navbar_links {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-left: 2rem;
+}
+
+.navbar_links a {
+    margin-right: 2rem;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}

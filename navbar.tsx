@@ -19,8 +19,10 @@ export default function Navbar() {
     return (
         <nav className={styles.navbar}>
             <Image src="/logo-240px.png" alt="CropThatImage" width={50} height={50} className={styles.navbar_logo} onClick={handleLogoClick}/>
-            <div className={styles.navbar_link}>
-
+            <div className={styles.navbar_links}>
+                <Link href="/" onClick={handleLogoClick}>Home</Link>
+                <Link href="https://lukassobotik.dev/project/CropThatImage">About</Link>
+                <Link href="https://github.com/lukassobotik/CropThatImage/issues/new">Found an Issue?</Link>
             </div>
         </nav>
     );
