@@ -17,6 +17,13 @@
     cursor: pointer;
 }
 
+.navbar_content {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .navbar_links {
     display: flex;
     align-items: center;
@@ -26,6 +33,21 @@
 
 .navbar_links a {
     margin-right: 2rem;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.navbar_socials {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+    width: 100%;
+    justify-content: flex-end;
+}
+
+.navbar_socials a {
+    margin-left: 2rem;
     color: white;
     text-decoration: none;
     font-weight: bold;

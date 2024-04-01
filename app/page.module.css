@@ -20,22 +20,6 @@
   min-height: 100vh;
 }
 
-.footer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #181818;
-  color: white;
-  bottom: 0;
-  width: 100%;
-  padding: 2rem 1rem 1rem;
-}
-
-.social_link svg {
-  width: 3rem;
-  height: 3rem;
-}
-
 .number_input {
   color: black;
 }
@@ -231,4 +215,9 @@
 
 .tooltip {
   z-index: 100;
+}
+
+.drag_and_drop {
+  margin-left: 2rem;
+  margin-right: 2rem;
 }
