@@ -23,7 +23,7 @@ export default function Navbar() {
                 <div className={styles.navbar_links}>
                     <Link href="/" onClick={handleLogoClick}>Home</Link>
                     <Link href="https://lukassobotik.dev/project/CropThatImage">About</Link>
-                    <Link href="https://github.com/lukassobotik/CropThatImage/issues/new">Found an Issue?</Link>
+                    <Link href="https://github.com/lukassobotik/CropThatImage/issues/new/choose">Found an Issue?</Link>
                 </div>
                 <div className={styles.navbar_socials}>
                     <Link href="https://github.com/lukassobotik/CropThatImage">Github</Link>
