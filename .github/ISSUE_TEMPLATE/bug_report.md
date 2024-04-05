@@ -22,5 +22,5 @@ If applicable, add screenshots to help explain your problem.
 
 **Device**
 Please fill out the following information:
- - OS: [e.g. iOS]
+ - OS: [e.g. Windows, Linux, macOS]
  - Browser [e.g. chrome, safari]
