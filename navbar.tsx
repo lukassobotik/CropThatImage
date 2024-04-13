@@ -3,6 +3,8 @@ import styles from "@/app/navbar.module.css";
 import Image from "next/image";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
+import packageJson from "@/package.json";
+const version = packageJson.version;
 
 export default function Navbar() {
     const router = useRouter();
@@ -18,7 +20,8 @@ export default function Navbar() {
 
     return (
         <nav className={styles.navbar}>
-            <Image src="/logo-240px.png" alt="CropThatImage" width={50} height={50} className={styles.navbar_logo} onClick={handleLogoClick}/>
+            <Image src="/logo-240px.png" alt="CropThatImage" width={50} height={50} className={styles.navbar_logo}
+                   onClick={handleLogoClick}/>
             <div className={styles.navbar_content}>
                 <div className={styles.navbar_links}>
                     <Link href="/" onClick={handleLogoClick}>Home</Link>
@@ -30,6 +33,7 @@ export default function Navbar() {
                     <Link href="https://buymeacoffee.com/lukassobotik">Support Me</Link>
                 </div>
             </div>
+            <div className={styles.version}>{version ? "v" + version : ""}</div>
         </nav>
     );
 }

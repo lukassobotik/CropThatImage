@@ -221,3 +221,15 @@
   margin-left: 2rem;
   margin-right: 2rem;
 }
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  height: 6rem;
+  color: white;
+}
+
+.footer div {
+  margin: .5rem;
+}
