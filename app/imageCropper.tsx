@@ -4,7 +4,6 @@ import styles from "./page.module.css";
 import imglyRemoveBackground, {Config} from "@imgly/background-removal"
 import Checkbox from "@/checkbox";
 import DownloadButton from "@/downloadButton";
-import DragAndDrop from "@/dragAndDrop";
 import 'react-tooltip/dist/react-tooltip.css';
 import {Tooltip} from 'react-tooltip';
 
@@ -248,8 +247,13 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
         return alphaSum / totalPixels;
     }
 
+    const getAlpha = (y : number, x : number, imageData : ImageData) => {
+        const alphaIndex = ((y * imageData.width + x) * 4) + 3;
+        return imageData.data[alphaIndex];
+    }
+
     const detectEdges = (imageData: ImageData) => {
-        let topBoundary = imageData.height, bottomBoundary = 0, leftBoundary = imageData.width, rightBoundary = 0;
+        let topBoundary = 1, bottomBoundary = -1, leftBoundary = 1, rightBoundary = -1;
 
         const threshold = calculateMeanAlpha(imageData) + addedAlphaThreshold;
 
@@ -258,18 +262,37 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
             return { topBoundary: topBoundary, bottomBoundary: bottomBoundary, leftBoundary: leftBoundary, rightBoundary: rightBoundary };
         }
 
+        /*
+        function extendEdges(imageData) {
+            for (let y = 0; y < imageData.height; y++) {
+                imageData.data[(y * imageData.width * 4) + 3] = 255;  // Left Edge
+                imageData.data[(y * imageData.width + imageData.width -1) * 4 + 3] = 255; // Right Edge
+            }
+            // ... (similarly for top and bottom edges)
+
+            return imageData;
+        }
+
+        // Before calling detectEdges
+        imageData = extendEdges(imageData)
+         */
+
         // Iterate through pixels
-        for (let y = 0; y < imageData.height; y++) {
-            for (let x = 0; x < imageData.width; x++) {
-                const alphaIndex = (y * imageData.width + x) * 4 + 3;
-                const alpha = imageData.data[alphaIndex];
+        for (let y = 0; y <= imageData.height; y++) {
+            for (let x = 0; x <= imageData.width; x++) {
+                const alpha = getAlpha(y, x, imageData); // Uses RGBA format by default
+                // if (y == 0) console.log("X: " + x, "Alpha: " + alpha, "Threshold: " + threshold, "Width: " + imageData.width, "Height: " + imageData.height);
 
                 if (alpha > threshold) {
+                    // if (y == 1051) console.log("ENTERIGNENNGEIGNIEGN", "y: " + y, "bottomBoundary: " + bottomBoundary);
                     topBoundary = Math.min(topBoundary, y);
                     bottomBoundary = Math.max(bottomBoundary, y);
                     leftBoundary = Math.min(leftBoundary, x);
                     rightBoundary = Math.max(rightBoundary, x);
                 }
+            }
+            if (y > 1049 && y <= 1051) {
+                console.log("Y: " + y, "Top Boundary: " + topBoundary, "Bottom Boundary: " + bottomBoundary, "Height: " + imageData.height);
             }
         }
 
