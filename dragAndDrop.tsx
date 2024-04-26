@@ -84,7 +84,7 @@ export default function DragAndDrop({onFileSubmit} : {onFileSubmit : any}) {
                 type="file"
                 multiple={true}
                 onChange={handleChange}
-                accept=".xlsx,.xls,image/*,.doc, .docx,.ppt, .pptx,.txt,.pdf"/>
+                accept="image/*"/>
 
             <div className={styles.dropzone_background} onClick={openFileExplorer}></div>
 
