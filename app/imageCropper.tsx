@@ -151,6 +151,11 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
     }
 
     const setImage = (url: any, saveHistory: boolean) => {
+        if (imageURLHistory[currentHistoryIndex] === url) {
+            console.info("Image is the same as the previous one, not saving history.");
+            return;
+        }
+
         setImageURL(url);
         if (saveHistory) {
             setImageURLHistory([...imageURLHistory, url]);
@@ -198,17 +203,21 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
         // Cropping
         let croppedWidth = right - left;
         let croppedHeight = bottom - top;
-        if (croppedWidth < 0) {
+        if (croppedWidth < 0 || croppedWidth == imageData.width) {
             console.log("Image width is already cropped to the edges");
-            croppedWidth = Math.abs(croppedWidth);
-            right = left;
-            left = right - croppedWidth;
+            if (croppedWidth < 0) {
+                croppedWidth = Math.abs(croppedWidth);
+                right = left;
+                left = right - croppedWidth;
+            }
         }
-        if (croppedHeight < 0) {
+        if (croppedHeight < 0 || Math.abs(croppedHeight) == imageData.height) {
             console.log("Image height is already cropped to the edges");
-            croppedHeight = Math.abs(croppedHeight);
-            bottom = top;
-            top = bottom - croppedHeight;
+            if (croppedHeight < 0) {
+                croppedHeight = Math.abs(croppedHeight);
+                bottom = top;
+                top = bottom - croppedHeight;
+            }
         }
 
         let addedSquarePaddingToWidth = false;
