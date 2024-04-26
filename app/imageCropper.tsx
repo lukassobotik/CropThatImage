@@ -4,7 +4,6 @@ import styles from "./page.module.css";
 import imglyRemoveBackground, {Config} from "@imgly/background-removal"
 import Checkbox from "@/checkbox";
 import DownloadButton from "@/downloadButton";
-import DragAndDrop from "@/dragAndDrop";
 import 'react-tooltip/dist/react-tooltip.css';
 import {Tooltip} from 'react-tooltip';
 
@@ -115,6 +114,7 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
             let currentCanvas = canvas;
             if (cropImage) {
                 console.log("Cropping Image");
+                // Pre-processing
                 const croppedCanvas = cropToEdges(img, ctx, canvas);
                 if (croppedCanvas !== undefined) {
                     currentCanvas = croppedCanvas;
@@ -134,7 +134,7 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
 
             if (padding > 0) {
                 console.log("Adding Padding");
-                const processed = addPaddingIfPossible(currentCanvas);
+                const processed = addPaddingToCanvas(currentCanvas, padding);
                 if (processed !== undefined) {
                     currentCanvas = processed;
                 }
@@ -151,6 +151,11 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
     }
 
     const setImage = (url: any, saveHistory: boolean) => {
+        if (imageURLHistory[currentHistoryIndex] === url) {
+            console.info("Image is the same as the previous one, not saving history.");
+            return;
+        }
+
         setImageURL(url);
         if (saveHistory) {
             setImageURLHistory([...imageURLHistory, url]);
@@ -164,7 +169,7 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
         setHasProcessingStarted(!value);
     }
 
-    const addPaddingIfPossible = (canvas: HTMLCanvasElement) => {
+    const addPaddingToCanvas = (canvas: HTMLCanvasElement, padding : number) => {
         if (padding === 0) return;
 
         let croppedWidth = canvas.width + (padding * 2);
@@ -198,17 +203,21 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
         // Cropping
         let croppedWidth = right - left;
         let croppedHeight = bottom - top;
-        if (croppedWidth < 0) {
+        if (croppedWidth < 0 || croppedWidth == imageData.width) {
             console.log("Image width is already cropped to the edges");
-            croppedWidth = Math.abs(croppedWidth);
-            right = left;
-            left = right - croppedWidth;
+            if (croppedWidth < 0) {
+                croppedWidth = Math.abs(croppedWidth);
+                right = left;
+                left = right - croppedWidth;
+            }
         }
-        if (croppedHeight < 0) {
+        if (croppedHeight < 0 || Math.abs(croppedHeight) == imageData.height) {
             console.log("Image height is already cropped to the edges");
-            croppedHeight = Math.abs(croppedHeight);
-            bottom = top;
-            top = bottom - croppedHeight;
+            if (croppedHeight < 0) {
+                croppedHeight = Math.abs(croppedHeight);
+                bottom = top;
+                top = bottom - croppedHeight;
+            }
         }
 
         let addedSquarePaddingToWidth = false;
@@ -248,6 +257,11 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
         return alphaSum / totalPixels;
     }
 
+    const getAlpha = (y : number, x : number, imageData : ImageData) => {
+        const alphaIndex = ((y * imageData.width + x) * 4) + 3;
+        return imageData.data[alphaIndex];
+    }
+
     const detectEdges = (imageData: ImageData) => {
         let topBoundary = imageData.height, bottomBoundary = 0, leftBoundary = imageData.width, rightBoundary = 0;
 
@@ -259,10 +273,9 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
         }
 
         // Iterate through pixels
-        for (let y = 0; y < imageData.height; y++) {
-            for (let x = 0; x < imageData.width; x++) {
-                const alphaIndex = (y * imageData.width + x) * 4 + 3;
-                const alpha = imageData.data[alphaIndex];
+        for (let y = 0; y <= imageData.height; y++) {
+            for (let x = 0; x <= imageData.width; x++) {
+                const alpha = getAlpha(y, x, imageData);
 
                 if (alpha > threshold) {
                     topBoundary = Math.min(topBoundary, y);
@@ -271,6 +284,28 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
                     rightBoundary = Math.max(rightBoundary, x);
                 }
             }
+
+            // Hacky solution to the infinite cropping by 1 pixel on already cropped images
+            // The logic is that we add 1 pixel to the bottom boundary, and then we go through the last row of pixels again,
+            // where if all the pixels that we go through are empty, we decrease the bottom boundary by 1, but if not, we keep it increased by 1
+            // The reason for doing only the height and not the width is because the infinite cropping only happens on the height (still not sure why)
+            if (y == imageData.height - 1) {
+                bottomBoundary += 1;
+            }
+        }
+
+        // Decreasing the bottom boundary by 1 if all the pixels in the last row are empty (the second part of the hacky solution)
+        let allEmpty = true;
+        for (let x = 0; x <= imageData.width; x++) {
+            const alpha = getAlpha(imageData.height - 1, x, imageData);
+            if (alpha > threshold) {
+                bottomBoundary = Math.max(bottomBoundary, imageData.height - 1);
+                allEmpty = false;
+                break;
+            }
+        }
+        if (allEmpty) {
+            bottomBoundary -= 1;
         }
 
         console.log("Top: " + topBoundary + " Bottom: " + bottomBoundary + " Left: " + leftBoundary + " Right: " + rightBoundary)
