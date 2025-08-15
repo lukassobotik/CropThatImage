@@ -1,7 +1,7 @@
 "use client";
 import React, {useEffect, useRef, useState} from "react";
 import styles from "./page.module.css";
-import imglyRemoveBackground, {Config} from "@imgly/background-removal"
+import { removeBackground, Config } from "@imgly/background-removal"
 import Checkbox from "@/checkbox";
 import DownloadButton from "@/downloadButton";
 import 'react-tooltip/dist/react-tooltip.css';
@@ -103,7 +103,7 @@ export default function ImageCropper({onFileSubmit} : {onFileSubmit : any}) {
 
             if (removeBg && !ignoreRemoveBg) {
                 console.log("Removing Background")
-                imglyRemoveBackground(currentImageURL, BGRemovalConfig).then((blob: Blob) => {
+                removeBackground(currentImageURL, BGRemovalConfig).then((blob: Blob) => {
                     setImage(URL.createObjectURL(blob), false);
                     setBackgroundRemoved(true);
                     return;
