@@ -1,6 +1,6 @@
 {
   "name": "cropthatimage",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@imgly/background-removal": "^1.4.5",
-    "next": "15.3.3",
+    "next": "^15.3.6",
     "react": "^18",
     "react-dom": "^18",
     "react-tooltip": "^5.26.3"
